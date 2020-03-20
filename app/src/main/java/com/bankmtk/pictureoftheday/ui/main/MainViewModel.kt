@@ -1,5 +1,7 @@
 package com.bankmtk.pictureoftheday.ui.main
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -8,14 +10,37 @@ import okhttp3.OkHttpClient
 import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Call
+import retrofit2.Callback
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 import java.io.IOException
 
-class MainViewModel : ViewModel() {
-    // TODO: Implement the ViewModel
+class MainViewModel(
+    private val liveData: MutableLiveData<PictureOfTheDayData> = MutableLiveData(),
+    private val retrofit: PODRetrofitImpl = PODRetrofitImpl()
+) : ViewModel() {
+    fun getData(): LiveData<PictureOfTheDayData>{
+        return liveData
+    }
+    private fun sendServerRequest(){
+        liveData.value = PictureOfTheDayData.Loading(0)
+        retrofit.getRetrofitImpl().getPictureOfTheday("DEMO_KEY").enqueue(object :
+        Callback<ServerResponse>{
+            override fun onResponse(
+                call: Call<ServerResponse>,
+                response: retrofit2.Response<ServerResponse>
+            ) {
+                if (response.isSuccessful && response.body()!= null){
+                    liveData.value = PictureOfTheDayData.Success(response.body()!!)
+                } else{
+                    liveData.value = PictureOfTheDayData.Error(Throwable("Error"))
+                }
+            }
+        })
+    }
+
 }
 
 data class ServerResponse(

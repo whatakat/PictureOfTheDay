@@ -22,6 +22,7 @@ class MainViewModel(
     private val retrofit: PODRetrofitImpl = PODRetrofitImpl()
 ) : ViewModel() {
     fun getData(): LiveData<PictureOfTheDayData>{
+        sendServerRequest()
         return liveData
     }
     private fun sendServerRequest(){
@@ -37,6 +38,10 @@ class MainViewModel(
                 } else{
                     liveData.value = PictureOfTheDayData.Error(Throwable("Error"))
                 }
+            }
+
+            override fun onFailure(call: Call<ServerResponse>, t: Throwable) {
+                liveData.value = PictureOfTheDayData.Error(t)
             }
         })
     }

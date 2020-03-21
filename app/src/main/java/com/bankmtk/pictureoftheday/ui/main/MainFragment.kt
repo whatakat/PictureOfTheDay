@@ -6,7 +6,10 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.Observer
+import coil.api.load
 import com.bankmtk.pictureoftheday.R
+import kotlinx.android.synthetic.main.main_fragment.*
 
 class MainFragment : Fragment() {
 
@@ -22,7 +25,28 @@ class MainFragment : Fragment() {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
-        // TODO: Use the ViewModel
+        val observer = Observer<PictureOfTheDayData>{renderData(it)}
+        viewModel.getData().observe(viewLifecycleOwner,observer)
+    }
+    private fun renderData(data:PictureOfTheDayData){
+        when(data){
+            is PictureOfTheDayData.Success ->{
+                val serverResponse: ServerResponse = data.serverResponse
+                message.text = serverResponse.explanation
+                image_view.load(serverResponse.url){
+                    lifecycle(this@MainFragment)
+                    error(R.drawable.ic_load_error)
+                    placeholder(R.drawable.ic_no_photo)
+                }
+            }
+            is PictureOfTheDayData.Error ->{
+                //Error
+            }
+            is PictureOfTheDayData.Loading->{
+                //Loading
+            }
+        }
+
     }
     companion object {
         fun newInstance() = MainFragment()
